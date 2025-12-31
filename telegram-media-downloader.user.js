@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Telegram 受限媒体下载器
 // @namespace    https://github.com/weiruankeji2025/weiruan-Telegram
-// @version      1.0.0
+// @version      1.1.0
 // @description  下载 Telegram Web 中的受限图片和视频，支持最佳质量下载
 // @author       WeiRuan Tech
 // @match        https://web.telegram.org/*
@@ -426,28 +426,101 @@
         return button;
     }
 
+    // 备用下载方法（使用 fetch + blob）
+    async function fallbackDownload(url, filename, mediaType) {
+        try {
+            notify('使用备用方案下载', `正在获取${mediaType === 'video' ? '视频' : '图片'}...`, 'info');
+
+            let blobUrl;
+
+            // 处理 data: URL（如 canvas 转换的图片）
+            if (url.startsWith('data:')) {
+                blobUrl = url;
+            }
+            // 处理 blob: URL
+            else if (url.startsWith('blob:')) {
+                blobUrl = url;
+            }
+            // 处理普通 HTTP(S) URL
+            else {
+                const response = await fetch(url, {
+                    mode: 'cors',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const blob = await response.blob();
+                blobUrl = URL.createObjectURL(blob);
+            }
+
+            // 创建下载链接
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+
+            // 清理
+            setTimeout(() => {
+                document.body.removeChild(a);
+                // 只清理我们创建的 blob URL
+                if (!url.startsWith('data:') && !url.startsWith('blob:')) {
+                    URL.revokeObjectURL(blobUrl);
+                }
+            }, 100);
+
+            notify('下载完成', `${mediaType === 'video' ? '视频' : '图片'}已保存！`, 'success');
+        } catch (error) {
+            console.error('备用下载错误:', error);
+            throw new Error(`备用下载失败: ${error.message}`);
+        }
+    }
+
     // 下载媒体文件
     async function downloadMedia(url, mediaType) {
-        return new Promise((resolve, reject) => {
-            const timestamp = new Date().getTime();
-            const extension = mediaType === 'video' ? 'mp4' : 'jpg';
-            const filename = `${CONFIG.downloadPath}/telegram_${mediaType}_${timestamp}.${extension}`;
+        const timestamp = new Date().getTime();
+        const extension = mediaType === 'video' ? 'mp4' : 'jpg';
+        const baseFilename = `telegram_${mediaType}_${timestamp}.${extension}`;
+        const filename = `${CONFIG.downloadPath}/${baseFilename}`;
 
-            notify('开始下载', `正在下载${mediaType === 'video' ? '视频' : '图片'}...`, 'info');
+        notify('开始下载', `正在下载${mediaType === 'video' ? '视频' : '图片'}...`, 'info');
+
+        // 优先使用 GM_download
+        return new Promise((resolve, reject) => {
+            // 检查是否支持 GM_download
+            if (typeof GM_download === 'undefined') {
+                // 如果不支持，直接使用备用方案
+                fallbackDownload(url, baseFilename, mediaType)
+                    .then(resolve)
+                    .catch(reject);
+                return;
+            }
 
             GM_download({
                 url: url,
                 name: filename,
                 saveAs: true,
                 onload: () => {
-                    notify('下载完成', `${mediaType === 'video' ? '视频' : '图片'}已保存到: ${filename}`, 'success');
+                    notify('下载完成', `${mediaType === 'video' ? '视频' : '图片'}已保存！`, 'success');
                     resolve();
                 },
                 onerror: (error) => {
-                    reject(new Error('下载失败，请重试'));
+                    console.warn('GM_download 失败，尝试备用方案:', error);
+                    // GM_download 失败时使用备用方案
+                    fallbackDownload(url, baseFilename, mediaType)
+                        .then(resolve)
+                        .catch(err => reject(new Error(`下载失败: ${err.message}`)));
                 },
                 ontimeout: () => {
-                    reject(new Error('下载超时，请重试'));
+                    console.warn('GM_download 超时，尝试备用方案');
+                    // 超时时使用备用方案
+                    fallbackDownload(url, baseFilename, mediaType)
+                        .then(resolve)
+                        .catch(err => reject(new Error(`下载超时: ${err.message}`)));
                 }
             });
         });
@@ -465,8 +538,8 @@
             const dataSrc = element.getAttribute('data-src') || element.getAttribute('data-video');
             if (dataSrc) return dataSrc;
         } else {
-            // 图片处理
-            if (element.src && !element.src.includes('blob:')) return element.src;
+            // 图片处理 - 也接受 blob URL（移除了 blob 过滤）
+            if (element.src) return element.src;
 
             // 尝试获取高清图片
             const srcset = element.srcset;
@@ -490,7 +563,8 @@
             // 尝试从 data 属性获取
             const dataSrc = element.getAttribute('data-src') ||
                           element.getAttribute('data-image') ||
-                          element.getAttribute('data-full');
+                          element.getAttribute('data-full') ||
+                          element.getAttribute('data-original');
             if (dataSrc) return dataSrc;
         }
 
@@ -620,7 +694,7 @@
     function addWatermark() {
         const watermark = document.createElement('div');
         watermark.className = 'tg-watermark';
-        watermark.textContent = 'Telegram 下载器 v1.0.0';
+        watermark.textContent = 'Telegram 下载器 v1.1.0';
         document.body.appendChild(watermark);
 
         // 5秒后隐藏水印
