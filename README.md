@@ -2,7 +2,7 @@
 
 一个功能强大的油猴脚本，用于下载 Telegram Web 中的受限图片和视频，支持最佳质量下载。
 
-![版本](https://img.shields.io/badge/version-1.4.0-blue.svg)
+![版本](https://img.shields.io/badge/version-1.5.0-blue.svg)
 ![许可证](https://img.shields.io/badge/license-MIT-green.svg)
 ![平台](https://img.shields.io/badge/platform-Telegram%20Web-blue.svg)
 
@@ -230,6 +230,20 @@ Telegram/telegram_video_1704067200000.mp4
 - 💡 原因：某些视频使用特殊编码（H.265/HEVC）浏览器不支持
 
 ## 🚀 更新日志
+
+### v1.5.0 (2025-12-31)
+- 🎉 **重磅更新：集成分块下载技术（Range Requests）**
+- 🚀 使用 HTTP Range 请求分块下载视频，获取**原始视频文件**
+- 📦 支持大文件断点续传式下载
+- 🎯 自动解析视频元数据和 MIME 类型
+- 📊 实时显示下载进度（百分比）
+- ⚡ 比录制方式更快、质量更好
+- 🔄 多重下载策略：分块下载 → 录制 → blob URL → 错误提示
+- ✅ 完全保留原始视频编码和质量
+- 📹 自动识别视频格式（MP4/WebM/MOV等）
+- 🛡️ 智能错误恢复机制
+- 💡 优化了 Telegram 内部 URL 处理
+- 🎨 保留所有图片下载功能
 
 ### v1.4.0 (2025-12-31)
 - 🎉 **重大更新：实现受限视频真正下载功能**

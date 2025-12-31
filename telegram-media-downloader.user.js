@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Telegram 受限媒体下载器
 // @namespace    https://github.com/weiruankeji2025/weiruan-Telegram
-// @version      1.4.0
-// @description  下载 Telegram Web 中的受限图片和视频，支持最佳质量下载和视频录制
+// @version      1.5.0
+// @description  下载 Telegram Web 中的受限图片和视频，支持分块下载原始视频文件
 // @author       WeiRuan Tech
 // @match        https://web.telegram.org/*
 // @match        https://*.web.telegram.org/*
@@ -36,6 +36,20 @@
         GM_setValue('downloadQuality', CONFIG.downloadQuality);
         GM_setValue('buttonPosition', CONFIG.buttonPosition);
     }
+
+    // Hash 函数（用于生成文件名）
+    const hashCode = (s) => {
+        var h = 0, l = s.length, i = 0;
+        if (l > 0) {
+            while (i < l) {
+                h = ((h << 5) - h + s.charCodeAt(i++)) | 0;
+            }
+        }
+        return h >>> 0;
+    };
+
+    // Content-Range 正则表达式
+    const contentRangeRegex = /^bytes (\d+)-(\d+)\/(\d+)$/;
 
     // 通知函数
     function notify(title, message, type = 'info') {
@@ -540,6 +554,112 @@
         );
     }
 
+    // 分块下载视频（核心下载函数 - 使用 Range 请求）
+    async function downloadVideoInChunks(url, filename) {
+        let blobs = [];
+        let nextOffset = 0;
+        let totalSize = null;
+        let fileExtension = 'mp4';
+
+        // 尝试从URL中提取文件名和MIME类型
+        try {
+            const metadata = JSON.parse(
+                decodeURIComponent(url.split('/')[url.split('/').length - 1])
+            );
+            if (metadata.fileName) {
+                filename = metadata.fileName;
+            }
+            if (metadata.mimeType) {
+                fileExtension = metadata.mimeType.split('/')[1];
+            }
+        } catch (e) {
+            // 无法解析，使用默认值
+        }
+
+        const fetchNextPart = async () => {
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Range': `bytes=${nextOffset}-`,
+                    },
+                    credentials: 'include'
+                });
+
+                if (![200, 206].includes(response.status)) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const mime = response.headers.get('Content-Type')?.split(';')[0];
+                if (mime && mime.startsWith('video/')) {
+                    fileExtension = mime.split('/')[1];
+                    const dotIndex = filename.lastIndexOf('.');
+                    if (dotIndex !== -1) {
+                        filename = filename.substring(0, dotIndex + 1) + fileExtension;
+                    } else {
+                        filename = filename + '.' + fileExtension;
+                    }
+                }
+
+                const contentRange = response.headers.get('Content-Range');
+                if (contentRange) {
+                    const match = contentRange.match(contentRangeRegex);
+                    if (match) {
+                        const startOffset = parseInt(match[1]);
+                        const endOffset = parseInt(match[2]);
+                        const size = parseInt(match[3]);
+
+                        if (startOffset !== nextOffset) {
+                            throw new Error('分块数据不连续');
+                        }
+                        if (totalSize && size !== totalSize) {
+                            throw new Error('文件总大小不一致');
+                        }
+
+                        nextOffset = endOffset + 1;
+                        totalSize = size;
+
+                        const progress = Math.round((nextOffset * 100) / totalSize);
+                        notify('下载进度', `${filename}: ${progress}%`, 'info');
+                    }
+                }
+
+                const blob = await response.blob();
+                blobs.push(blob);
+
+                // 如果还有更多数据，继续下载
+                if (totalSize && nextOffset < totalSize) {
+                    return fetchNextPart();
+                } else {
+                    // 下载完成，合并并保存
+                    const finalBlob = new Blob(blobs, { type: `video/${fileExtension}` });
+                    const blobUrl = URL.createObjectURL(finalBlob);
+
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = filename;
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+
+                    setTimeout(() => {
+                        URL.revokeObjectURL(blobUrl);
+                    }, 100);
+
+                    notify('下载完成', `视频已保存：${filename}`, 'success');
+                    return true;
+                }
+            } catch (error) {
+                console.error('分块下载错误:', error);
+                notify('下载失败', error.message, 'error');
+                throw error;
+            }
+        };
+
+        return fetchNextPart();
+    }
+
     // 检查视频是否可以捕获
     function canCaptureVideo(videoElement) {
         if (!videoElement) return false;
@@ -816,28 +936,37 @@
 
                     blobUrl = await captureImageWithCanvas(sourceElement);
                 }
-                // 对于视频，使用 MediaRecorder 录制
-                else if (mediaType === 'video' && sourceElement && sourceElement.tagName === 'VIDEO') {
-                    notify('检测到受限视频', '正在使用录制技术捕获视频...', 'info');
-
-                    // 检查视频是否可以录制
-                    if (!canCaptureVideo(sourceElement)) {
-                        throw new Error('❌ 此视频无法录制\n\n💡 可能的原因：\n• 视频未正确加载\n• 视频源不可用\n• 浏览器限制\n\n✅ 请尝试：\n1️⃣ 等待视频完全加载后再点击下载\n2️⃣ 播放视频一次，然后再尝试下载\n3️⃣ 使用 Telegram Desktop 下载');
-                    }
+                // 对于视频，使用分块下载
+                else if (mediaType === 'video') {
+                    notify('检测到受限视频', '正在使用分块下载技术...', 'info');
 
                     try {
-                        // 使用 MediaRecorder 录制视频
-                        blobUrl = await captureVideoWithRecorder(sourceElement);
-                        // 修改文件扩展名为 webm（录制格式）
-                        filename = filename.replace(/\.(mp4|mov|avi)$/, '.webm');
-                    } catch (recordError) {
-                        // 如果录制失败，尝试从 blob URL 下载
-                        const videoUrl = sourceElement.src || sourceElement.currentSrc;
-                        if (videoUrl && videoUrl.startsWith('blob:')) {
-                            notify('尝试替代方法', '正在从缓存获取视频...', 'info');
-                            blobUrl = await downloadFromBlobUrl(videoUrl);
+                        // 使用分块下载（Range 请求）
+                        await downloadVideoInChunks(url, filename);
+                        return; // 分块下载函数内部会处理保存
+                    } catch (rangeError) {
+                        console.error('分块下载失败:', rangeError);
+
+                        // 如果有视频元素，尝试其他方法
+                        if (sourceElement && sourceElement.tagName === 'VIDEO') {
+                            const videoUrl = sourceElement.src || sourceElement.currentSrc;
+
+                            // 尝试从 blob URL 下载
+                            if (videoUrl && videoUrl.startsWith('blob:')) {
+                                notify('尝试替代方法', '正在从缓存获取视频...', 'info');
+                                try {
+                                    blobUrl = await downloadFromBlobUrl(videoUrl);
+                                } catch (blobError) {
+                                    // 最后尝试录制
+                                    notify('切换到录制模式', '正在录制视频流...', 'info');
+                                    blobUrl = await captureVideoWithRecorder(sourceElement);
+                                    filename = filename.replace(/\.(mp4|mov|avi)$/, '.webm');
+                                }
+                            } else {
+                                throw new Error('❌ 视频下载失败\n\n' + rangeError.message + '\n\n✅ 建议：\n1️⃣ 使用 Telegram Desktop 下载\n2️⃣ 查看页面上的【查看下载方法】按钮');
+                            }
                         } else {
-                            throw new Error('❌ 视频录制失败\n\n' + recordError.message + '\n\n✅ 建议：\n1️⃣ 确保视频正在播放\n2️⃣ 使用 Telegram Desktop 下载\n3️⃣ 查看页面上的【查看下载方法】按钮');
+                            throw rangeError;
                         }
                     }
                 }
@@ -851,27 +980,23 @@
             }
             // 处理 blob: URL
             else if (url.startsWith('blob:')) {
-                // 对于视频的 blob URL，尝试多种方法
-                if (mediaType === 'video' && sourceElement && sourceElement.tagName === 'VIDEO') {
-                    try {
-                        // 方法1：尝试直接从 blob URL 下载
-                        blobUrl = await downloadFromBlobUrl(url);
-                    } catch (blobError) {
-                        // 方法2：如果失败，尝试录制视频流
-                        notify('切换到录制模式', '正在录制视频流...', 'info');
-                        try {
-                            blobUrl = await captureVideoWithRecorder(sourceElement);
-                            filename = filename.replace(/\.(mp4|mov|avi)$/, '.webm');
-                        } catch (recordError) {
-                            throw new Error('无法下载视频：' + blobError.message + ' | ' + recordError.message);
-                        }
-                    }
-                } else {
-                    blobUrl = url;
-                }
+                blobUrl = url;
             }
             // 处理普通 HTTP(S) URL
             else {
+                // 对于视频，优先使用分块下载
+                if (mediaType === 'video') {
+                    try {
+                        await downloadVideoInChunks(url, filename);
+                        return; // 分块下载函数内部会处理保存
+                    } catch (rangeError) {
+                        // 分块下载失败，回退到普通下载
+                        console.warn('分块下载失败，使用普通下载:', rangeError);
+                        notify('下载中', `正在获取视频...`, 'info');
+                    }
+                }
+
+                // 普通下载（图片或视频回退）
                 notify('下载中', `正在获取${mediaType === 'video' ? '视频' : '图片'}...`, 'info');
 
                 const response = await fetch(url, {
@@ -1297,7 +1422,7 @@
     function addWatermark() {
         const watermark = document.createElement('div');
         watermark.className = 'tg-watermark';
-        watermark.textContent = 'Telegram 下载器 v1.4.0';
+        watermark.textContent = 'Telegram 下载器 v1.5.0';
         document.body.appendChild(watermark);
 
         // 5秒后隐藏水印
