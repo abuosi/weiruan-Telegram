@@ -2,7 +2,7 @@
 
 一个功能强大的油猴脚本，用于下载 Telegram Web 中的受限图片和视频，支持最佳质量下载。
 
-![版本](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![版本](https://img.shields.io/badge/version-1.1.0-blue.svg)
 ![许可证](https://img.shields.io/badge/license-MIT-green.svg)
 ![平台](https://img.shields.io/badge/platform-Telegram%20Web-blue.svg)
 
@@ -221,6 +221,14 @@ Telegram/telegram_video_1704067200000.mp4
 - iOS 可以使用 Safari + Userscripts
 
 ## 🚀 更新日志
+
+### v1.1.0 (2025-12-31)
+- 🐛 修复 GM_download 下载失败的问题
+- ✨ 添加备用下载方案（fetch + blob）
+- ✅ 改进对 blob: URL 的支持
+- ✅ 改进对 data: URL 的支持（Canvas 图片）
+- ✅ 增强错误处理和日志记录
+- ✅ 自动降级到备用方案确保下载成功
 
 ### v1.0.0 (2024-01-01)
 - ✨ 首次发布
