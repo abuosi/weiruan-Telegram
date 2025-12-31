@@ -162,17 +162,20 @@
         createProgressBar(videoId, fileName);
 
         try {
-            // 第一步：获取文件总大小
-            const headRes = await fetch(url, {
-                method: 'HEAD',
+            // 发送第一个Range请求获取文件信息（避免HEAD请求失败）
+            console.log('[下载] 开始下载...');
+            const firstRes = await fetch(url, {
+                method: 'GET',
+                headers: { 'Range': 'bytes=0-' },
                 credentials: 'include'
             });
 
-            const contentLength = headRes.headers.get('Content-Length');
-            const totalSize = contentLength ? parseInt(contentLength) : null;
+            if (![200, 206].includes(firstRes.status)) {
+                throw new Error(`HTTP ${firstRes.status}`);
+            }
 
             // 获取MIME类型
-            const mime = headRes.headers.get('Content-Type')?.split(';')[0];
+            const mime = firstRes.headers.get('Content-Type')?.split(';')[0];
             if (mime && mime.startsWith('video/')) {
                 fileExtension = mime.split('/')[1];
                 if (!fileName.includes('.')) {
@@ -180,13 +183,44 @@
                 }
             }
 
-            console.log(`[下载] 文件大小: ${totalSize ? (totalSize / 1024 / 1024).toFixed(2) + 'MB' : '未知'}`);
+            // 检查是否支持Range请求
+            const contentRange = firstRes.headers.get('Content-Range');
 
-            // 如果文件较小（<10MB）或服务器不支持Range，直接下载
-            if (!totalSize || totalSize < 10 * 1024 * 1024) {
+            // 不支持Range或返回200（完整文件），直接下载
+            if (firstRes.status === 200 || !contentRange) {
                 console.log('[下载] 使用直接下载模式');
-                const res = await fetch(url, { credentials: 'include' });
-                const blob = await res.blob();
+                const blob = await firstRes.blob();
+
+                completeProgress(videoId);
+
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = fileName;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+
+                notify('下载完成', fileName);
+                downloadingVideos.delete(videoId);
+                return;
+            }
+
+            // 解析Content-Range获取总大小
+            const rangeMatch = contentRange.match(contentRangeRegex);
+            if (!rangeMatch) {
+                throw new Error('无法解析Content-Range');
+            }
+
+            const totalSize = parseInt(rangeMatch[3]);
+            console.log(`[下载] 文件大小: ${(totalSize / 1024 / 1024).toFixed(2)}MB`);
+
+            // 小文件（<5MB）直接下载，不并发
+            if (totalSize < 5 * 1024 * 1024) {
+                console.log('[下载] 小文件，使用直接下载');
+                const blob = await firstRes.blob();
 
                 completeProgress(videoId);
 
@@ -206,16 +240,20 @@
             }
 
             // 大文件：使用并发分块下载（提速）
-            console.log('[下载] 使用并发分块下载模式');
+            console.log('[下载] 大文件，使用并发分块下载');
             const chunkSize = 2 * 1024 * 1024; // 2MB per chunk
             const chunks = [];
             const totalChunks = Math.ceil(totalSize / chunkSize);
 
-            // 并发下载（最多4个并发）
-            const concurrency = 4;
-            let downloadedSize = 0;
+            // 第一个chunk已经下载了，保存它
+            chunks[0] = await firstRes.blob();
+            let downloadedSize = chunks[0].size;
+            updateProgress(videoId, fileName, Math.round((downloadedSize * 100) / totalSize));
 
-            for (let i = 0; i < totalChunks; i += concurrency) {
+            // 并发下载剩余chunk（最多4个并发）
+            const concurrency = 4;
+
+            for (let i = 1; i < totalChunks; i += concurrency) {
                 const batchPromises = [];
 
                 for (let j = 0; j < concurrency && (i + j) < totalChunks; j++) {
