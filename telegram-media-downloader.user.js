@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Telegram 受限媒体下载器
 // @namespace    https://github.com/weiruankeji2025/weiruan-Telegram
-// @version      1.5.0
+// @version      1.5.1
 // @description  下载 Telegram Web 中的受限图片和视频，支持分块下载原始视频文件
 // @author       WeiRuan Tech
 // @match        https://web.telegram.org/*
@@ -578,13 +578,21 @@
 
         const fetchNextPart = async () => {
             try {
+                console.log(`[视频下载] 请求分块: bytes=${nextOffset}-`);
+
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: {
                         'Range': `bytes=${nextOffset}-`,
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                     },
                     credentials: 'include'
                 });
+
+                console.log(`[视频下载] 响应状态: ${response.status}`);
+                console.log(`[视频下载] Content-Type: ${response.headers.get('Content-Type')}`);
+                console.log(`[视频下载] Content-Range: ${response.headers.get('Content-Range')}`);
+                console.log(`[视频下载] Content-Length: ${response.headers.get('Content-Length')}`);
 
                 if (![200, 206].includes(response.status)) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -610,9 +618,11 @@
                         const size = parseInt(match[3]);
 
                         if (startOffset !== nextOffset) {
+                            console.error(`[视频下载] 分块不连续! 期望: ${nextOffset}, 实际: ${startOffset}`);
                             throw new Error('分块数据不连续');
                         }
                         if (totalSize && size !== totalSize) {
+                            console.error(`[视频下载] 文件大小不一致! 之前: ${totalSize}, 现在: ${size}`);
                             throw new Error('文件总大小不一致');
                         }
 
@@ -620,20 +630,32 @@
                         totalSize = size;
 
                         const progress = Math.round((nextOffset * 100) / totalSize);
+                        console.log(`[视频下载] 进度: ${progress}% (${nextOffset}/${totalSize} bytes)`);
                         notify('下载进度', `${filename}: ${progress}%`, 'info');
+                    }
+                } else if (response.status === 200) {
+                    // 没有Content-Range，可能是服务器不支持Range请求，返回完整文件
+                    console.log('[视频下载] 服务器返回完整文件（不支持Range）');
+                    const contentLength = response.headers.get('Content-Length');
+                    if (contentLength) {
+                        totalSize = parseInt(contentLength);
                     }
                 }
 
                 const blob = await response.blob();
                 blobs.push(blob);
+                console.log(`[视频下载] 已获取 blob，大小: ${blob.size} bytes`);
 
                 // 如果还有更多数据，继续下载
                 if (totalSize && nextOffset < totalSize) {
                     return fetchNextPart();
                 } else {
                     // 下载完成，合并并保存
+                    console.log('[视频下载] 所有分块下载完成，开始合并...');
                     const finalBlob = new Blob(blobs, { type: `video/${fileExtension}` });
                     const blobUrl = URL.createObjectURL(finalBlob);
+
+                    console.log(`[视频下载] 最终文件大小: ${finalBlob.size} bytes`);
 
                     const a = document.createElement('a');
                     a.href = blobUrl;
@@ -648,10 +670,12 @@
                     }, 100);
 
                     notify('下载完成', `视频已保存：${filename}`, 'success');
+                    console.log('[视频下载] 下载触发完成');
                     return true;
                 }
             } catch (error) {
-                console.error('分块下载错误:', error);
+                console.error('[视频下载] 分块下载错误:', error);
+                console.error('[视频下载] 错误详情:', error.message, error.stack);
                 notify('下载失败', error.message, 'error');
                 throw error;
             }
@@ -945,28 +969,67 @@
                         await downloadVideoInChunks(url, filename);
                         return; // 分块下载函数内部会处理保存
                     } catch (rangeError) {
-                        console.error('分块下载失败:', rangeError);
+                        console.error('[下载策略] 分块下载失败:', rangeError.message);
 
-                        // 如果有视频元素，尝试其他方法
-                        if (sourceElement && sourceElement.tagName === 'VIDEO') {
+                        // 尝试不同的回退策略
+                        let downloadSuccess = false;
+
+                        // 策略1: 尝试普通fetch下载（不使用Range）
+                        if (!downloadSuccess) {
+                            try {
+                                console.log('[下载策略] 尝试普通fetch下载...');
+                                notify('尝试替代方法', '正在使用普通下载...', 'info');
+
+                                const response = await fetch(url, {
+                                    method: 'GET',
+                                    credentials: 'include'
+                                });
+
+                                if (response.ok) {
+                                    const blob = await response.blob();
+                                    blobUrl = URL.createObjectURL(blob);
+                                    downloadSuccess = true;
+                                    console.log('[下载策略] 普通下载成功');
+                                }
+                            } catch (fetchError) {
+                                console.error('[下载策略] 普通下载失败:', fetchError.message);
+                            }
+                        }
+
+                        // 策略2: 如果有视频元素，尝试从blob URL下载
+                        if (!downloadSuccess && sourceElement && sourceElement.tagName === 'VIDEO') {
                             const videoUrl = sourceElement.src || sourceElement.currentSrc;
 
-                            // 尝试从 blob URL 下载
                             if (videoUrl && videoUrl.startsWith('blob:')) {
-                                notify('尝试替代方法', '正在从缓存获取视频...', 'info');
                                 try {
+                                    console.log('[下载策略] 尝试从blob URL下载...');
+                                    notify('尝试替代方法', '正在从缓存获取视频...', 'info');
                                     blobUrl = await downloadFromBlobUrl(videoUrl);
+                                    downloadSuccess = true;
+                                    console.log('[下载策略] Blob URL下载成功');
                                 } catch (blobError) {
-                                    // 最后尝试录制
-                                    notify('切换到录制模式', '正在录制视频流...', 'info');
-                                    blobUrl = await captureVideoWithRecorder(sourceElement);
-                                    filename = filename.replace(/\.(mp4|mov|avi)$/, '.webm');
+                                    console.error('[下载策略] Blob URL下载失败:', blobError.message);
                                 }
-                            } else {
-                                throw new Error('❌ 视频下载失败\n\n' + rangeError.message + '\n\n✅ 建议：\n1️⃣ 使用 Telegram Desktop 下载\n2️⃣ 查看页面上的【查看下载方法】按钮');
                             }
-                        } else {
-                            throw rangeError;
+                        }
+
+                        // 策略3: 最后尝试录制
+                        if (!downloadSuccess && sourceElement && sourceElement.tagName === 'VIDEO') {
+                            try {
+                                console.log('[下载策略] 尝试录制视频流...');
+                                notify('切换到录制模式', '正在录制视频流...', 'info');
+                                blobUrl = await captureVideoWithRecorder(sourceElement);
+                                filename = filename.replace(/\.(mp4|mov|avi)$/, '.webm');
+                                downloadSuccess = true;
+                                console.log('[下载策略] 视频录制成功');
+                            } catch (recordError) {
+                                console.error('[下载策略] 视频录制失败:', recordError.message);
+                            }
+                        }
+
+                        // 如果所有方法都失败了
+                        if (!downloadSuccess) {
+                            throw new Error('❌ 视频下载失败\n\n原始错误: ' + rangeError.message + '\n\n✅ 建议：\n1️⃣ 刷新页面后重试\n2️⃣ 使用 Telegram Desktop 下载\n3️⃣ 查看页面上的【查看下载方法】按钮');
                         }
                     }
                 }
@@ -1422,7 +1485,7 @@
     function addWatermark() {
         const watermark = document.createElement('div');
         watermark.className = 'tg-watermark';
-        watermark.textContent = 'Telegram 下载器 v1.5.0';
+        watermark.textContent = 'Telegram 下载器 v1.5.1';
         document.body.appendChild(watermark);
 
         // 5秒后隐藏水印
